@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 export default function Signup() {
-  const { mutate, isLoading, isError, isSuccess } = useSignup();
+  const { mutate, isPending, isError, isSuccess, error } = useSignup();
+  const isLoading = isPending;
   const navigate = useNavigate();
 
   const [serverError, setServerError] = useState("");
