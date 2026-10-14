@@ -1,6 +1,6 @@
 import React from "react";
 import Sidebar from "../../components/sidebar/sidebar.jsx";
-import Navbar from "../../components/navbar/navbar.jsx";
+import Navbar from "../../components/navbar/Navbar.jsx";
 
 import { useGetMyMatches } from "../../hooks/matchesHook/useGetMyMatches.hook.js";
 import { useAcceptMatch } from "../../hooks/matchesHook/useAcceptMatch.hook.js";

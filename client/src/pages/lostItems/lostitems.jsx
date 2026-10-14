@@ -3,7 +3,7 @@ import { toast, Toaster } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Sidebar from "../../components/sidebar/sidebar.jsx";
-import Navbar from "../../components/navbar/navbar.jsx";
+import Navbar from "../../components/navbar/Navbar.jsx";
 import { itemSchema } from "../../schema/item.schema.js";
 import { useCreateItem } from "../../hooks/itemsHook/useCreateItem.hook.js";
 import { Sparkles, Loader2, Wand2, UploadCloud, CheckCircle2 } from "lucide-react";

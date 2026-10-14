@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import Sidebar from "../../components/sidebar/sidebar.jsx";
 import { useFetchItems } from "../../hooks/itemsHook/useGetItems.hook";
 import { useNavigate } from "react-router";
-import Navbar from "../../components/navbar/navbar.jsx";
+import Navbar from "../../components/navbar/Navbar.jsx";
 
 // schema enum: "wallet" | "phone" | "bag" | "id" | "electronics" | "others"
 const CATEGORY_EMOJI = {

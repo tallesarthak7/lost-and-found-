@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/sidebar/sidebar.jsx";
-import Navbar from "../../components/navbar/navbar.jsx";
+import Navbar from "../../components/navbar/Navbar.jsx";
 import { UserRound, Pencil, Lock, CheckCircle, XCircle } from "lucide-react";
 import { useGetProfile, useUpdateProfile, useUpdatePassword } from "../../hooks/usersHook/useProfile.js";
 

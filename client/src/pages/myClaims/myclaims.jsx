@@ -1,7 +1,7 @@
 import React from "react";
 import Sidebar from "../../components/sidebar/sidebar.jsx";
 import { useGetMyClaims } from "../../hooks/claimsHook/useGetMyClaims.hook.js";
-import Navbar from "../../components/navbar/navbar.jsx";
+import Navbar from "../../components/navbar/Navbar.jsx";
 
 // ─── STATUS COLORS ─────────────────────────────
 const STATUS_STYLES = {

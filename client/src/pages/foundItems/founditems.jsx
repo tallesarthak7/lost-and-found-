@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import Sidebar from "../../components/sidebar/sidebar.jsx";
 import { useGetMyItems } from "../../hooks/itemsHook/useGetMyItems.hook";
 import { useNavigate } from "react-router";
-import Navbar from "../../components/navbar/navbar.jsx";
+import Navbar from "../../components/navbar/Navbar.jsx";
 
 const CATEGORY_EMOJI = {
   wallet: "👛", phone: "📱", bag: "🎒",
