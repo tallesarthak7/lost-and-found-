@@ -39,6 +39,7 @@ const allowedOrigins = [
   /\.devtunnels\.ms$/,      // VS Code Dev Tunnels
   /\.vercel\.app$/,         // Vercel deployment domains
   /\.loca\.lt$/,            // Localtunnel domains
+  /\.trycloudflare\.com$/,  // Cloudflare Tunnel domains
 ];
 
 app.use(cors({
