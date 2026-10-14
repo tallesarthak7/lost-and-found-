@@ -9,7 +9,7 @@ import Cookies from "js-cookie";
 
 
 export default function Login() {
-  const { mutate, isLoading, isError, isSuccess } = useLogin();
+  const { mutate, isPending, isError, isSuccess, error } = useLogin();
   const navigate = useNavigate();
   const [login, setLogin] = useState(false);
   
@@ -24,33 +24,27 @@ export default function Login() {
 
   function onSubmit(values) {
     mutate(values);
-    form.reset();
   }
 
   useEffect(() => {
-    if (isSuccess) setLogin(true);
-  }, [isSuccess]);
+    if (isSuccess) {
+      setLogin(true);
+      form.reset();
+      const user = JSON.parse(Cookies.get("user") || "{}");
 
-
-  useEffect(() => {
-  if (isSuccess) {
-    const user = JSON.parse(Cookies.get("user"));
-
-    if (user.role === "admin") {
-      navigate("/admin");
-    } else {
-      navigate("/dashboard");
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }
-}, [isSuccess]);
-
+  }, [isSuccess]);
 
   useEffect(() => {
     if (isError) {
-      //alert("Login failed. Please check your credentials and try again.");
-      toast.error("Login failed. Please check your credentials and try again.");
+      toast.error(error?.message || "Login failed. Please check your credentials and try again.");
     }
-  }, [isError]);
+  }, [isError, error]);
 
   return (
     <section className="flex min-h-screen items-center justify-center bg-gray-50 px-4">

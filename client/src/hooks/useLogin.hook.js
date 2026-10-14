@@ -1,19 +1,32 @@
 import Cookies from "js-cookie";
 import { useMutation } from "@tanstack/react-query";
 
+import { getApiUrl } from "../lib/utils.js";
+
 // Simulated function to post data to an API endpoint
 const loginUser = async (user) => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(user),
-  });
-  if (!response.ok) {
-    throw new Error("Network response was not ok");
+  const url = getApiUrl("login");
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    });
+  } catch (err) {
+    throw new Error(
+      `Cannot connect to backend server at ${url}. Check your network and verify VITE_API_URL in Vercel settings.`
+    );
   }
-  return response.json();
+
+  const result = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(result?.message || result?.reason || "Please check your credentials and try again.");
+  }
+  return result;
 };
 
 // Custom hook for posting todos

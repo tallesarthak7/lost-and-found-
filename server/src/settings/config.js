@@ -36,7 +36,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   /\.app\.github\.dev$/,    // GitHub Codespaces
-  /\.devtunnels\.ms$/,      // VS Code Dev Tunnels ← add this
+  /\.devtunnels\.ms$/,      // VS Code Dev Tunnels
+  /\.vercel\.app$/,         // Vercel deployment domains
 ];
 
 app.use(cors({

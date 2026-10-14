@@ -1,18 +1,28 @@
 import { useMutation } from "@tanstack/react-query";
 
+import { getApiUrl } from "../lib/utils.js";
+
 // Simulated function to post data to an API endpoint
 const createUser = async (user) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}users/create`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user),
-    });
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
+    const url = getApiUrl("users/create");
+    let response;
+    try {
+        response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(user),
+        });
+    } catch (err) {
+        throw new Error(`Cannot connect to backend server at ${url}. Check your network and verify VITE_API_URL in Vercel settings.`);
     }
-    return response.json();
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+        throw new Error(data?.message || data?.reason || 'Failed to create user');
+    }
+    return data;
 };
 
 export function useSignup() {
