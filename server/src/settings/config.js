@@ -38,6 +38,7 @@ const allowedOrigins = [
   /\.app\.github\.dev$/,    // GitHub Codespaces
   /\.devtunnels\.ms$/,      // VS Code Dev Tunnels
   /\.vercel\.app$/,         // Vercel deployment domains
+  /\.loca\.lt$/,            // Localtunnel domains
 ];
 
 app.use(cors({
