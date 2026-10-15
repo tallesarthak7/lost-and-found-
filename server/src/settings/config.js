@@ -39,6 +39,7 @@ const allowedOrigins = [
   /\.app\.github\.dev$/,    // GitHub Codespaces
   /\.devtunnels\.ms$/,      // VS Code Dev Tunnels
   /\.vercel\.app$/,         // Vercel deployment domains
+  /\.onrender\.com$/,       // Render deployment domains
   /\.loca\.lt$/,            // Localtunnel domains
   /\.trycloudflare\.com$/,  // Cloudflare Tunnel domains
 ];
@@ -55,7 +56,7 @@ app.use(cors({
     if (isAllowed) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS blocked: ${origin}`));
+      callback(null, false);
     }
   },
   credentials: true,
@@ -109,9 +110,9 @@ app.use("/", claimRouter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 console.log(swaggerSpecs);
 
-// Fallback for SPA frontend routes (GET requests)
+// Fallback for SPA frontend routes (GET/HEAD requests)
 app.use((req, res, next) => {
-  if (req.method === "GET") {
+  if (req.method === "GET" || req.method === "HEAD") {
     const indexPath = path.resolve(__dirname, "../../public/index.html");
     if (fs.existsSync(indexPath)) {
       return res.sendFile(indexPath);
