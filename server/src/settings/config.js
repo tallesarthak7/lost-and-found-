@@ -1,3 +1,4 @@
+const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const morgan = require("morgan");
@@ -81,6 +82,22 @@ app.use(responseFormatter);
 //  Winston Express Logger Middleware
 app.use(expressWinstonLogger);
 
+// Serve uploads statically
+const uploadsDir = process.env.UPLOAD_DIR || path.resolve(__dirname, "../../client/public/uploads");
+if (fs.existsSync(uploadsDir)) {
+  app.use("/uploads", express.static(uploadsDir));
+}
+const serverUploadsDir = path.resolve(__dirname, "../../uploads");
+if (fs.existsSync(serverUploadsDir)) {
+  app.use("/uploads", express.static(serverUploadsDir));
+}
+
+// Serve frontend static build if present
+const frontendPublic = path.resolve(__dirname, "../../public");
+if (fs.existsSync(frontendPublic)) {
+  app.use(express.static(frontendPublic));
+}
+
 //  Defining Routes
 app.use("/", authRouter);
 app.use("/users", usersRouter);
@@ -91,6 +108,17 @@ app.use("/", claimRouter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 console.log(swaggerSpecs);
+
+// Fallback for SPA frontend routes (GET requests)
+app.use((req, res, next) => {
+  if (req.method === "GET") {
+    const indexPath = path.resolve(__dirname, "../../public/index.html");
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+  }
+  next();
+});
 
 // send back a 404 error for any unknown api request
 // Sequence is important
