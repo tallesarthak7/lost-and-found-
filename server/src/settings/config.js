@@ -101,7 +101,15 @@ if (fs.existsSync(frontendPublic)) {
 }
 
 // Health check route for monitoring, Render checks, and DB verification
-app.get(["/health", "/api/health"], (req, res) => {
+app.get(["/health", "/api/health"], async (req, res) => {
+  if (req.query.retry === "true" && global.connectToDatabase && mongoose.connection.readyState !== 1) {
+    try {
+      await global.connectToDatabase();
+    } catch (e) {
+      // ignore, error logged in connectToDatabase
+    }
+  }
+
   const readyStates = {
     0: "disconnected",
     1: "connected",
@@ -115,6 +123,7 @@ app.get(["/health", "/api/health"], (req, res) => {
     status: isHealthy ? "ok" : "degraded",
     database: readyStates[state] || "unknown",
     readyState: state,
+    diagnostics: global.__MONGO_STATUS__ || {},
     timestamp: new Date().toISOString(),
   });
 });
