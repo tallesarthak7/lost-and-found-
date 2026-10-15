@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "staging": "cross-env NODE_ENV=staging nodemon src/index.js",
-    "start": "cross-env NODE_ENV=production nodemon src/index.js"
+    "start": "node src/index.js"
   },
   "repository": {
     "type": "git",
