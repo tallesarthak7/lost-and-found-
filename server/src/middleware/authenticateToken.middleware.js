@@ -11,7 +11,8 @@ const authenticateToken = (req, res, next) => {
       .status(StatusCodes.UNAUTHORIZED)
       .json({ message: "You are not Authorized to perform this request" }); // No token present
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  const secret = process.env.JWT_SECRET || "supersecretkey_campus_lf_jwt_token_2026";
+  jwt.verify(token, secret, (err, user) => {
     if (err)
       return res
         .status(StatusCodes.FORBIDDEN)

@@ -20,7 +20,13 @@ const createUser = async (user) => {
 
     const data = await response.json().catch(() => null);
     if (!response.ok) {
-        throw new Error(data?.message || data?.reason || 'Failed to create user');
+        const errorMsg =
+          data?.error?.message ||
+          data?.error?.reason ||
+          data?.reason ||
+          data?.message ||
+          'Failed to create user';
+        throw new Error(errorMsg);
     }
     return data;
 };

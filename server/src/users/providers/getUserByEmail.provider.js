@@ -1,12 +1,12 @@
 const User = require("../users.schema.js");
 
+const mongoose = require("mongoose");
+
 async function getUserByEmail(email) {
-  try {
-    const user = await User.findOne({ email: email });
-    return user;
-  } catch (error) {
-    return error;
+  if (mongoose.connection.readyState !== 1) {
+    throw new Error("Database is not connected. Please check server configuration or DATABASE_URL.");
   }
+  return await User.findOne({ email: email });
 }
 
 module.exports = getUserByEmail;

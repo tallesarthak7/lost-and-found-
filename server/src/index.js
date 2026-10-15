@@ -34,27 +34,29 @@ async function bootstrap() {
     const dbName = process.env.DATABASE_NAME || "campus_lf";
 
     if (!dbUrl) {
-      if (process.env.NODE_ENV !== "production") {
-        console.log("No external DATABASE_URL found. Initializing local persistent MongoDB instance...");
+      console.log("No external DATABASE_URL provided. Initializing embedded MongoDB instance...");
+      try {
+        const { MongoMemoryServer } = require("mongodb-memory-server");
+        const dbPath = path.resolve(__dirname, "../.mongo-data");
+        if (!fs.existsSync(dbPath)) {
+          fs.mkdirSync(dbPath, { recursive: true });
+        }
+        let mongod;
         try {
-          const { MongoMemoryServer } = require("mongodb-memory-server");
-          const dbPath = path.resolve(__dirname, "../.mongo-data");
-          if (!fs.existsSync(dbPath)) {
-            fs.mkdirSync(dbPath, { recursive: true });
-          }
-          const mongod = await MongoMemoryServer.create({
+          mongod = await MongoMemoryServer.create({
             instance: {
               dbPath,
               storageEngine: "wiredTiger",
             },
           });
-          dbUrl = mongod.getUri();
-          console.log(`Embedded MongoDB instance active at: ${dbUrl}`);
-        } catch (memErr) {
-          console.error("Local MongoDB memory server failed to initialize:", memErr.message);
+        } catch (wtErr) {
+          console.warn("WiredTiger storage failed, trying standard in-memory:", wtErr.message);
+          mongod = await MongoMemoryServer.create();
         }
-      } else {
-        console.error("⚠️ WARNING: No DATABASE_URL found in production environment variables! Please configure your MongoDB Atlas connection string in Render settings.");
+        dbUrl = mongod.getUri();
+        console.log(`Embedded MongoDB instance active at: ${dbUrl}`);
+      } catch (memErr) {
+        console.error("Embedded MongoDB memory server failed to initialize:", memErr.message);
       }
     }
 

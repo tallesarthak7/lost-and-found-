@@ -25,7 +25,13 @@ const loginUser = async (user) => {
   const result = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(result?.message || result?.reason || "Please check your credentials and try again.");
+    const errorMsg =
+      result?.error?.message ||
+      result?.error?.reason ||
+      result?.reason ||
+      result?.message ||
+      "Please check your credentials and try again.";
+    throw new Error(errorMsg);
   }
   return result;
 };
