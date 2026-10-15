@@ -14,6 +14,7 @@ const { StatusCodes } = require("http-status-codes");
 const expressWinstonLogger = require("../middleware/expressWinston.middleware.js");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./swagger.config.js");
+const mongoose = require("mongoose");
 
 function configureApp(app) {
 
@@ -98,6 +99,25 @@ const frontendPublic = path.resolve(__dirname, "../../public");
 if (fs.existsSync(frontendPublic)) {
   app.use(express.static(frontendPublic));
 }
+
+// Health check route for monitoring, Render checks, and DB verification
+app.get(["/health", "/api/health"], (req, res) => {
+  const readyStates = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  };
+  const state = mongoose.connection.readyState;
+  const isHealthy = state === 1;
+
+  return res.status(StatusCodes.OK).json({
+    status: isHealthy ? "ok" : "degraded",
+    database: readyStates[state] || "unknown",
+    readyState: state,
+    timestamp: new Date().toISOString(),
+  });
+});
 
 //  Defining Routes
 app.use("/", authRouter);

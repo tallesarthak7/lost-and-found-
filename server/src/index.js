@@ -30,8 +30,19 @@ configureApp(app);
 
 async function bootstrap() {
   try {
-    let dbUrl = process.env.DATABASE_URL;
-    const dbName = process.env.DATABASE_NAME || "campus_lf";
+    let dbUrl = (process.env.DATABASE_URL || process.env.MONGO_URI || process.env.MONGODB_URI || "").trim();
+    const dbName = (process.env.DATABASE_NAME || "campus_lf").trim();
+
+    // Register mongoose connection events for runtime monitoring
+    mongoose.connection.on("connected", () => {
+      console.log(`[Database] Mongoose connected successfully to '${mongoose.connection.name || dbName}'`);
+    });
+    mongoose.connection.on("error", (err) => {
+      console.error("[Database] Mongoose connection error:", err.message);
+    });
+    mongoose.connection.on("disconnected", () => {
+      console.warn("[Database] Mongoose disconnected from database");
+    });
 
     if (!dbUrl) {
       console.log("No external DATABASE_URL provided. Initializing embedded MongoDB instance...");
@@ -62,13 +73,22 @@ async function bootstrap() {
 
     if (dbUrl) {
       try {
-        await mongoose.connect(dbUrl, { dbName });
+        const isAtlas = dbUrl.startsWith("mongodb+srv://");
+        console.log(`Connecting to MongoDB (${isAtlas ? "MongoDB Atlas Cloud Cluster" : "Standard MongoDB URI"})...`);
+        await mongoose.connect(dbUrl, { dbName, serverSelectionTimeoutMS: 10000 });
         console.log("Connected To MongoDB");
 
         // Seed default admin account if not already created
         await seedAdmin();
       } catch (connErr) {
         console.error("MongoDB Connection Error:", connErr.message);
+        if (connErr.message.includes("bad auth") || connErr.message.includes("Authentication failed")) {
+          console.error("-> Atlas Diagnostic: Authentication failed. Verify your database username and password in DATABASE_URL.");
+        } else if (connErr.message.includes("querySrv") || connErr.message.includes("ENOTFOUND")) {
+          console.error("-> Atlas Diagnostic: DNS resolution failed. Check your cluster hostname in DATABASE_URL.");
+        } else if (connErr.message.includes("buffering timed out") || connErr.message.includes("whitelist") || connErr.message.includes("ETIMEDOUT") || connErr.message.includes("timed out")) {
+          console.error("-> Atlas Diagnostic: Connection timed out. Make sure 0.0.0.0/0 (allow from anywhere) is active in MongoDB Atlas Network Access!");
+        }
       }
     }
 
