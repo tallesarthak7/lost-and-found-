@@ -34,34 +34,50 @@ async function bootstrap() {
     const dbName = process.env.DATABASE_NAME || "campus_lf";
 
     if (!dbUrl) {
-      console.log("No external DATABASE_URL found. Initializing local persistent MongoDB instance...");
-      const { MongoMemoryServer } = require("mongodb-memory-server");
-      const dbPath = path.resolve(__dirname, "../.mongo-data");
-      if (!fs.existsSync(dbPath)) {
-        fs.mkdirSync(dbPath, { recursive: true });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("No external DATABASE_URL found. Initializing local persistent MongoDB instance...");
+        try {
+          const { MongoMemoryServer } = require("mongodb-memory-server");
+          const dbPath = path.resolve(__dirname, "../.mongo-data");
+          if (!fs.existsSync(dbPath)) {
+            fs.mkdirSync(dbPath, { recursive: true });
+          }
+          const mongod = await MongoMemoryServer.create({
+            instance: {
+              dbPath,
+              storageEngine: "wiredTiger",
+            },
+          });
+          dbUrl = mongod.getUri();
+          console.log(`Embedded MongoDB instance active at: ${dbUrl}`);
+        } catch (memErr) {
+          console.error("Local MongoDB memory server failed to initialize:", memErr.message);
+        }
+      } else {
+        console.error("⚠️ WARNING: No DATABASE_URL found in production environment variables! Please configure your MongoDB Atlas connection string in Render settings.");
       }
-      const mongod = await MongoMemoryServer.create({
-        instance: {
-          dbPath,
-          storageEngine: "wiredTiger",
-        },
-      });
-      dbUrl = mongod.getUri();
-      console.log(`Embedded MongoDB instance active at: ${dbUrl}`);
     }
 
-    await mongoose.connect(dbUrl, { dbName });
-    console.log("Connected To MongoDB");
+    if (dbUrl) {
+      try {
+        await mongoose.connect(dbUrl, { dbName });
+        console.log("Connected To MongoDB");
 
-    // Seed default admin account if not already created
-    await seedAdmin();
+        // Seed default admin account if not already created
+        await seedAdmin();
+      } catch (connErr) {
+        console.error("MongoDB Connection Error:", connErr.message);
+      }
+    }
 
     app.listen(port, () => {
       console.log(`App listening on port ${port}`);
     });
   } catch (error) {
     console.error("Bootstrap error:", error);
-    process.exit(1);
+    app.listen(port, () => {
+      console.log(`App listening on port ${port} (fallback)`);
+    });
   }
 }
 
