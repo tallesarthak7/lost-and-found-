@@ -36,13 +36,36 @@ global.__MONGO_STATUS__ = {
   attempts: 0,
 };
 
+function sanitizeMongoUri(uri) {
+  if (!uri) return { uri: "" };
+  const trimmed = uri.trim();
+  const match = trimmed.match(/^(mongodb(?:\+srv)?:\/\/)([^:]+):(.*)@([^@\/]+)(\/.*)?$/);
+  if (match) {
+    const [, proto, user, pass, host, rest] = match;
+    if (proto.includes("+srv") && !host.includes(".")) {
+      return {
+        error: `Invalid MongoDB Atlas URI: host parsed as '${host}'. An Atlas SRV connection string must end with a cluster domain like @cluster0.xxxxx.mongodb.net. If your password contains '@', make sure the full cluster domain follows the password.`,
+        uri: trimmed,
+      };
+    }
+    const cleanUser = encodeURIComponent(decodeURIComponent(user));
+    const cleanPass = encodeURIComponent(decodeURIComponent(pass));
+    return {
+      uri: `${proto}${cleanUser}:${cleanPass}@${host}${rest || ""}`,
+    };
+  }
+  return { uri: trimmed };
+}
+
 async function connectToDatabase() {
   if (mongoose.connection.readyState === 1) return true;
 
-  let dbUrl = (process.env.DATABASE_URL || process.env.MONGO_URI || process.env.MONGODB_URI || "").trim();
+  let rawDbUrl = (process.env.DATABASE_URL || process.env.MONGO_URI || process.env.MONGODB_URI || "").trim();
+  const sanitized = sanitizeMongoUri(rawDbUrl);
+  let dbUrl = sanitized.uri;
   const dbName = (process.env.DATABASE_NAME || "campus_lf").trim();
 
-  global.__MONGO_STATUS__.hasDbUrl = Boolean(dbUrl);
+  global.__MONGO_STATUS__.hasDbUrl = Boolean(rawDbUrl);
   global.__MONGO_STATUS__.urlType = dbUrl.startsWith("mongodb+srv://")
     ? "mongodb+srv"
     : dbUrl.startsWith("mongodb://")
@@ -51,6 +74,12 @@ async function connectToDatabase() {
     ? "other"
     : "none";
   global.__MONGO_STATUS__.attempts += 1;
+
+  if (sanitized.error) {
+    global.__MONGO_STATUS__.lastError = sanitized.error;
+    console.error("-> Atlas Diagnostic:", sanitized.error);
+    return false;
+  }
 
   if (!dbUrl) {
     console.log("No external DATABASE_URL provided. Initializing embedded MongoDB instance...");
