@@ -14,7 +14,7 @@ const { StatusCodes } = require("http-status-codes");
 const expressWinstonLogger = require("../middleware/expressWinston.middleware.js");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./swagger.config.js");
-const mongoose = require("mongoose");
+const { testConnection } = require("../db/prisma.js");
 
 function configureApp(app) {
 
@@ -35,8 +35,8 @@ function configureApp(app) {
 
 // CORS Configuration with Multiple Origins and Regex Support
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
+  /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?$/, // Any localhost / loopback port (e.g. 5173, 5174, 3000)
+  /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/, // Local LAN IPs
   /\.app\.github\.dev$/,    // GitHub Codespaces
   /\.devtunnels\.ms$/,      // VS Code Dev Tunnels
   /\.vercel\.app$/,         // Vercel deployment domains
@@ -45,23 +45,38 @@ const allowedOrigins = [
   /\.trycloudflare\.com$/,  // Cloudflare Tunnel domains
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, curl)
     if (!origin) return callback(null, true);
 
-    const isAllowed = allowedOrigins.some(o =>
-      o instanceof RegExp ? o.test(origin) : o === origin
-    );
+    const isAllowed =
+      process.env.NODE_ENV !== "production" ||
+      allowedOrigins.some(o =>
+        o instanceof RegExp ? o.test(origin) : o === origin
+      );
 
     if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
       callback(null, false);
     }
   },
   credentials: true,
-}));
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "bypass-tunnel-reminder",
+    "X-Requested-With",
+    "Accept",
+    "Origin"
+  ],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 
 
 
@@ -102,28 +117,26 @@ if (fs.existsSync(frontendPublic)) {
 
 // Health check route for monitoring, Render checks, and DB verification
 app.get(["/health", "/api/health"], async (req, res) => {
-  if (req.query.retry === "true" && global.connectToDatabase && mongoose.connection.readyState !== 1) {
+  if (req.query.retry === "true" && global.connectToDatabase) {
     try {
       await global.connectToDatabase();
     } catch (e) {
-      // ignore, error logged in connectToDatabase
+      // ignore
     }
   }
 
-  const readyStates = {
-    0: "disconnected",
-    1: "connected",
-    2: "connecting",
-    3: "disconnecting",
-  };
-  const state = mongoose.connection.readyState;
-  const isHealthy = state === 1;
+  const dbCheck = await testConnection();
+  const isHealthy = dbCheck.connected;
 
   return res.status(StatusCodes.OK).json({
     status: isHealthy ? "ok" : "degraded",
-    database: readyStates[state] || "unknown",
-    readyState: state,
-    diagnostics: global.__MONGO_STATUS__ || {},
+    database: isHealthy ? "connected" : "disconnected",
+    provider: "postgresql",
+    supabase: {
+      projectId: process.env.SUPABASE_PROJECT_ID || "uzgklxytaixdousaxhtb",
+      region: process.env.SUPABASE_REGION || "ap-northeast-1",
+    },
+    diagnostics: global.__DB_STATUS__ || {},
     timestamp: new Date().toISOString(),
   });
 });

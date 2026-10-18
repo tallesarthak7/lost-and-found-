@@ -44,9 +44,9 @@ export default function Signup() {
 
   useEffect(() => {
     if (isError) {
-      setServerError("User may already exist or something went wrong.");
+      setServerError(error?.message || "User may already exist or something went wrong.");
     }
-  }, [isError]);
+  }, [isError, error]);
 
   return (
     <section className="flex min-h-screen items-center justify-center bg-gray-50 px-4">

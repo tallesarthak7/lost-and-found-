@@ -5,6 +5,7 @@ import Sidebar from "../../components/sidebar/sidebar.jsx";
 import Navbar from "../../components/navbar/Navbar.jsx";
 import { UserRound, Compass, BaggageClaim, Search } from "lucide-react";
 import { useUserDashboard } from "../../hooks/usersHook/useUserDashboard.js";
+import MatchDetailsModal from "../../components/matches/MatchDetailsModal.jsx";
 
 const CATEGORY_EMOJI = {
   wallet: "👛", phone: "📱", bag: "🎒",
@@ -47,6 +48,7 @@ const Dashboard = () => {
   const claims         = Array.isArray(dashboard.claims)         ? dashboard.claims         : [];
   const browseItems    = Array.isArray(dashboard.browseItems)    ? dashboard.browseItems    : [];
   const profile        = dashboard.profile ?? cookieUser;
+  const [selectedMatch, setSelectedMatch] = React.useState(null);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
@@ -205,7 +207,10 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <button className="mt-3 px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs hover:bg-indigo-600 transition">
+                  <button
+                    onClick={() => setSelectedMatch(match)}
+                    className="mt-3 px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-xs hover:bg-indigo-600 transition cursor-pointer"
+                  >
                     View
                   </button>
                 </div>
@@ -339,6 +344,14 @@ const Dashboard = () => {
         </div>
 
       </main>
+
+      {/* Match Details Modal */}
+      {selectedMatch && (
+        <MatchDetailsModal
+          match={selectedMatch}
+          onClose={() => setSelectedMatch(null)}
+        />
+      )}
     </div>
   );
 };

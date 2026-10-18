@@ -5,11 +5,13 @@ import { useGetClaims } from "../../hooks/adminHook/useFetchClaims.hook";
 import { useApproveClaim } from "../../hooks/claimsHook/useApproveClaim.hook";
 import { useRejectClaim } from "../../hooks/claimsHook/useRejectClaim.hook";
 
+import { toast, Toaster } from "sonner";
+
 const ClaimsPage = () => {
   const { data, isLoading, error } = useGetClaims();
 
-  const { mutate: approveClaim } = useApproveClaim();
-  const { mutate: rejectClaim } = useRejectClaim();
+  const { mutate: approveClaim, isPending: isApproving } = useApproveClaim();
+  const { mutate: rejectClaim, isPending: isRejecting } = useRejectClaim();
 
   const [selectedClaim, setSelectedClaim] = React.useState(null);
 
@@ -148,11 +150,24 @@ const [reviewNote, setReviewNote] = React.useState("");
                       {claim.message}
                     </p>
 
-                    <p className="text-sm text-yellow-600 font-medium mt-2">
-                      Status:
-                      {" "}
-                      {claim.status}
-                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs font-semibold text-gray-400">Status:</span>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider ${
+                        claim.status === "approved"
+                          ? "bg-green-100 text-green-700 border border-green-300"
+                          : claim.status === "rejected"
+                          ? "bg-red-100 text-red-700 border border-red-300"
+                          : "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                      }`}>
+                        {claim.status}
+                      </span>
+                    </div>
+
+                    {claim.reviewNote && (
+                      <p className="text-xs text-gray-500 mt-1 italic">
+                        Note: {claim.reviewNote}
+                      </p>
+                    )}
 
                   </div>
 
@@ -161,28 +176,32 @@ const [reviewNote, setReviewNote] = React.useState("");
                 {/* Actions */}
                 <div className="flex gap-3 items-center">
 
-                  {claim.status === "pending" && (
+                  {claim.status === "pending" ? (
                     <>
                       <button
                         onClick={() => {
                           setSelectedClaim(claim);
                           setActionType("approve");
                         }}
-                        className="px-5 py-2 bg-green-500 text-white rounded-xl"
+                        className="px-5 py-2 bg-green-500 hover:bg-green-600 transition text-white font-medium rounded-xl shadow-sm"
                       >
                         Approve
                       </button>
 
-                    <button
-                      onClick={() => {
-                        setSelectedClaim(claim);
-                        setActionType("reject");
-                      }}
-                      className="px-5 py-2 bg-red-500 text-white rounded-xl"
-                    >
-                      Reject
-                    </button>
+                      <button
+                        onClick={() => {
+                          setSelectedClaim(claim);
+                          setActionType("reject");
+                        }}
+                        className="px-5 py-2 bg-red-500 hover:bg-red-600 transition text-white font-medium rounded-xl shadow-sm"
+                      >
+                        Reject
+                      </button>
                     </>
+                  ) : (
+                    <span className="text-xs font-medium text-gray-400 italic">
+                      Reviewed
+                    </span>
                   )}
 
                 </div>
@@ -208,7 +227,7 @@ const [reviewNote, setReviewNote] = React.useState("");
       <textarea
         value={reviewNote}
         onChange={(e) => setReviewNote(e.target.value)}
-        placeholder="Enter review note..."
+        placeholder="Enter review note (optional)..."
         className="w-full border rounded-xl p-3 h-32 outline-none focus:ring-2 focus:ring-indigo-400"
       />
 
@@ -220,36 +239,60 @@ const [reviewNote, setReviewNote] = React.useState("");
             setReviewNote("");
             setActionType(null);
           }}
-          className="px-4 py-2 bg-gray-300 rounded-xl"
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 transition text-gray-700 rounded-xl"
         >
           Cancel
         </button>
 
         <button
+          disabled={isApproving || isRejecting}
           onClick={() => {
+            const currentClaim = selectedClaim;
+            const note = reviewNote;
+
             if (actionType === "approve") {
-              approveClaim({
-                id: selectedClaim._id,
-                reviewNote,
-              });
+              approveClaim(
+                {
+                  id: currentClaim._id,
+                  reviewNote: note,
+                },
+                {
+                  onSuccess: () => {
+                    toast.success("Claim approved successfully!");
+                  },
+                  onError: (err) => {
+                    toast.error(err?.message || "Failed to approve claim");
+                  },
+                }
+              );
             } else {
-              rejectClaim({
-                id: selectedClaim._id,
-                reviewNote,
-              });
+              rejectClaim(
+                {
+                  id: currentClaim._id,
+                  reviewNote: note,
+                },
+                {
+                  onSuccess: () => {
+                    toast.success("Claim rejected successfully!");
+                  },
+                  onError: (err) => {
+                    toast.error(err?.message || "Failed to reject claim");
+                  },
+                }
+              );
             }
 
             setSelectedClaim(null);
             setReviewNote("");
             setActionType(null);
           }}
-          className={`px-4 py-2 text-white rounded-xl ${
+          className={`px-4 py-2 text-white font-medium rounded-xl transition disabled:opacity-50 ${
             actionType === "approve"
-              ? "bg-green-500"
-              : "bg-red-500"
+              ? "bg-green-500 hover:bg-green-600"
+              : "bg-red-500 hover:bg-red-600"
           }`}
         >
-          Confirm
+          {isApproving || isRejecting ? "Processing..." : "Confirm"}
         </button>
 
       </div>
@@ -259,6 +302,7 @@ const [reviewNote, setReviewNote] = React.useState("");
   </div>
 )}
       </main>
+      <Toaster />
     </div>
   );
 };

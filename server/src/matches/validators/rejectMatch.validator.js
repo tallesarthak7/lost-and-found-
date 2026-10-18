@@ -1,8 +1,9 @@
 const { param } = require("express-validator");
+const isValidId = require("../../helpers/idValidator.helper.js");
 
 const rejectMatchValidator = [
   param("id")
-    .isMongoId()
+    .custom(isValidId)
     .withMessage("Invalid match ID"),
 ];
 

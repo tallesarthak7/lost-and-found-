@@ -1,8 +1,9 @@
 const { param, body } = require("express-validator");
+const isValidId = require("../../helpers/idValidator.helper.js");
 
 const updateItemValidator = [
   // id comes from the URL: PATCH /items/:id
-  param("id", "Valid document Id is required").notEmpty().isMongoId(),
+  param("id", "Valid document Id is required").notEmpty().custom(isValidId),
 
   body("title").optional().isLength({ min: 3 }).trim(),
   body("description").optional().isLength({ min: 5 }).trim(),

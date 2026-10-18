@@ -1,58 +1,8 @@
-const {Schema, model} = require("mongoose");    
+const { createModel } = require("../db/modelAdapter.js");
 
-const userSchema = new Schema(
-  {
-    firstname: {
-        type: String,
-        required: [true, "Username is required"],
-        trim: true,
-    },
-    lastname: {
-        type: String,
-        required: [true, "Lastname is required"],   
-        trim: true,
-    },
-    email: {    
-        type: String,
-        required: [true, "Email is required"],
-        trim: true, 
-        unique: true,
-        lowercase: true,
-    },
-    password: {
-        type: String,
-        required: [true, "Password is required"]
-    },
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
-      index: true,
-    },
+const User = createModel("User");
 
-    phone: {
-      type: String,
-      trim: true,
-      default: null,
-    },
-
-    profileImage: {
-      type: String, // image URL
-      default: null,
-    },
-
-    isBlocked: {
-      type: Boolean,
-      default: false,
-      index: true,
-    },
-  },
-  { timestamps: true }
-);
-
-const User = model("User", userSchema);
 module.exports = User;
-
 
 /**
  * @swagger

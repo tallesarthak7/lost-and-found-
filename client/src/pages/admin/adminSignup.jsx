@@ -48,9 +48,9 @@ export default function AdminSignup() {
 
   useEffect(() => {
     if (isError) {
-      setServerError("User may already exist or something went wrong.");
+      setServerError(error?.message || "User may already exist or something went wrong.");
     }
-  }, [isError]);
+  }, [isError, error]);
 
   const inputCls =
     "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-white disabled:opacity-50 transition";

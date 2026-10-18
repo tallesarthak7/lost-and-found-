@@ -1,4 +1,5 @@
 const { body } = require("express-validator");
+const isValidId = require("../../helpers/idValidator.helper.js");
 
 const getItemsValidator = [
   // pagination
@@ -57,7 +58,7 @@ const getItemsValidator = [
   // postedBy filter
   body("postedBy")
     .optional()
-    .isMongoId()
+    .custom(isValidId)
     .withMessage("Invalid user ID"),
 
   // coordinates filter (future geo queries)

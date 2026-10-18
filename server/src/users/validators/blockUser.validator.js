@@ -1,11 +1,11 @@
 const { param } = require("express-validator");
-const mongoose = require("mongoose");
+const isValidId = require("../../helpers/idValidator.helper.js");
 
 const blockUserValidator = [
   param("id")
     .notEmpty()
     .withMessage("User ID is required")
-    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .custom(isValidId)
     .withMessage("Invalid user ID"),
 ];
 

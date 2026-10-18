@@ -1,4 +1,5 @@
 const { body } = require("express-validator");
+const isValidId = require("../../helpers/idValidator.helper.js");
 
 const createItemValidator = [
   // title
@@ -45,7 +46,7 @@ const createItemValidator = [
   // verifiedBy (optional)
   body("verifiedBy")
     .optional()
-    .isMongoId()
+    .custom(isValidId)
     .withMessage("Invalid admin ID"),
 
   // keywords (optional)

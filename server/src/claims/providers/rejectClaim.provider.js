@@ -14,6 +14,17 @@ async function rejectClaimProvider(req, res) {
       return res.status(404).json({ message: "Claim not found" });
     }
 
+    if (claim.status === "rejected") {
+      if (reviewNote) {
+        claim.reviewNote = reviewNote;
+        await claim.save();
+      }
+      return res.json({
+        message: "Claim rejected",
+        data: claim,
+      });
+    }
+
     if (claim.status === "approved") {
       return res.status(400).json({
         message: "Approved claim cannot be rejected",

@@ -1,9 +1,8 @@
 const User = require("../users.schema.js");
-
-const mongoose = require("mongoose");
+const { testConnection } = require("../../db/prisma.js");
 
 async function getUserByEmail(email) {
-  if (mongoose.connection.readyState !== 1 && global.connectToDatabase) {
+  if (global.connectToDatabase) {
     try {
       await global.connectToDatabase();
     } catch (e) {
@@ -11,9 +10,6 @@ async function getUserByEmail(email) {
     }
   }
 
-  if (mongoose.connection.readyState !== 1) {
-    throw new Error("Database is not connected. Please check server configuration or DATABASE_URL.");
-  }
   return await User.findOne({ email: email });
 }
 

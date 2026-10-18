@@ -30,11 +30,11 @@ async function getMyMatchesProvider(userId, query = {}) {
   const matches = await Match.find(filter)
     .populate({
       path: "lostItemId",
-      select: "title location category postedBy type",
+      select: "title location category postedBy type description date",
     })
     .populate({
       path: "foundItemId",
-      select: "title location category postedBy type",
+      select: "title location category postedBy type description date",
     })
     .sort({ createdAt: -1 })
     .skip(skip)

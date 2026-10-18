@@ -3,11 +3,13 @@
 const Claim = require("../claims.schema");
 const Item = require("../../items/items.schema");
 const Match = require("../../matches/matches.schema");
+const { StatusCodes } = require("http-status-codes");
 
 async function approveClaimProvider(req, res) {
   try {
     const claimId = req.params.id;
     const adminId = req.user.sub;
+    const { reviewNote } = req.body || {};
 
     const claim = await Claim.findById(claimId);
 
@@ -16,7 +18,14 @@ async function approveClaimProvider(req, res) {
     }
 
     if (claim.status === "approved") {
-      return res.status(400).json({ message: "Claim already approved" });
+      if (reviewNote) {
+        claim.reviewNote = reviewNote;
+        await claim.save();
+      }
+      return res.status(StatusCodes.OK).json({
+        message: "Claim approved successfully",
+        data: claim,
+      });
     }
 
     if (claim.status === "rejected") {
@@ -26,6 +35,7 @@ async function approveClaimProvider(req, res) {
     // 1. Approve claim
     claim.status = "approved";
     claim.reviewedBy = adminId;
+    claim.reviewNote = reviewNote || "Approved by admin";
     claim.resolvedAt = new Date();
 
     await claim.save();

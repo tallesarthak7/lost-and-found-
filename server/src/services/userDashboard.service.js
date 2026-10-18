@@ -42,8 +42,8 @@ const getMyMatches = async (userId) => {
   })
     .sort({ matchScore: -1 })
     .limit(4)
-    .populate("lostItemId",  "title location category")
-    .populate("foundItemId", "title location category");
+    .populate("lostItemId")
+    .populate("foundItemId");
 };
 
 // My claims — claims made by the user (latest 5)

@@ -1,13 +1,14 @@
 const { body } = require("express-validator");
+const isValidId = require("../../helpers/idValidator.helper.js");
 
 const createClaimValidator = [
   body("itemId")
-    .isMongoId()
+    .custom(isValidId)
     .withMessage("Invalid itemId"),
 
   body("matchId")
     .optional({ values: "falsy" })
-    .isMongoId()
+    .custom(isValidId)
     .withMessage("Invalid matchId"),
 
   body("message")

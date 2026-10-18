@@ -37,7 +37,19 @@ export const useApproveClaim = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
+        queryKey: ["adminClaims"],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["myClaims"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["claims"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["adminItems"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["items"],
       });
     },
   });

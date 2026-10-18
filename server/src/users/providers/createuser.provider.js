@@ -1,6 +1,5 @@
 const User = require("../users.schema.js");
 const bcrypt = require("bcrypt");
-const mongoose = require("mongoose");
 const { matchedData } = require("express-validator");
 const { StatusCodes } = require("http-status-codes");
 const errorLogger = require("../../helpers/errorLogger.helper.js");
@@ -9,19 +8,12 @@ async function createUserProvider(req, res) {
   const validatedData = matchedData(req);
 
   try {
-    if (mongoose.connection.readyState !== 1 && global.connectToDatabase) {
+    if (global.connectToDatabase) {
       try {
         await global.connectToDatabase();
       } catch (e) {
         // Handled in connectToDatabase
       }
-    }
-
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: "Database is connecting or unavailable. Please try again shortly.",
-        reason: "Database is connecting or unavailable. Please try again shortly.",
-      });
     }
 
     // Check if user already exists
@@ -69,7 +61,7 @@ async function createUserProvider(req, res) {
 
     const isDbError =
       (error.message && error.message.includes("Database")) ||
-      error.name === "MongooseError";
+      error.name?.includes("Prisma");
     const msg = isDbError
       ? "Database is connecting or unavailable. Please try again shortly."
       : "Unable to process your request at the moment, please try later.";
